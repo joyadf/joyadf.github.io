@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>钢轨应力放散拉伸量计算</title>
+<style>
+:root{
+  --bg:#eef1f5;
+  --card:#ffffff;
+  --text:#1f2733;
+  --muted:#5f6b7a;
+  --primary:#1667e3;
+  --primary-weak:#e8f0fe;
+  --accent:#e8590c;
+  --accent-weak:#fff1e6;
+  --danger:#e03131;
+  --danger-weak:#fff0f0;
+  --warn:#f08c00;
+  --warn-weak:#fff9e8;
+  --border:#e3e8ef;
+  --shadow:0 2px 10px rgba(31,39,51,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Helvetica Neue",Arial,sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.65;
+  padding:20px 16px 60px;
+}
+.wrap{max-width:1080px;margin:0 auto}
+header{text-align:center;padding:14px 10px 22px}
+header h1{font-size:26px;letter-spacing:1px;display:flex;align-items:center;justify-content:center;gap:10px}
+header h1 .ico{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#1667e3,#4d8df5);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:21px;box-shadow:0 4px 12px rgba(22,103,227,.28)}
+header p{color:var(--muted);font-size:14px;margin-top:6px}
+.grid{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:20px}
+.card h2{font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card h2::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--primary)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
+.field .hint{font-size:12px;color:#9aa6b2;margin-top:4px}
+.input-wrap{display:flex;align-items:center;border:1px solid var(--border);border-radius:9px;background:#fbfcfe;transition:border-color .15s}
+.input-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,103,227,.12)}
+.input-wrap input,.input-wrap select{flex:1;border:none;background:transparent;padding:9px 12px;font-size:15px;color:var(--text);outline:none;min-width:0;font-family:inherit}
+.input-wrap select{cursor:pointer;appearance:none;-webkit-appearance:none;background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="%235f6b7a" stroke-width="1.6" fill="none"/></svg>') no-repeat right 12px center;padding-right:30px}
+.input-wrap .unit{font-size:12px;color:var(--muted);padding-right:12px;white-space:nowrap}
+.adv-toggle{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--primary);cursor:pointer;user-select:none;margin-top:6px;padding:6px 0}
+.adv-toggle svg{transition:transform .2s;flex:none}
+.adv-toggle.open svg{transform:rotate(180deg)}
+.adv-body{display:none;margin-top:10px;padding-top:12px;border-top:1px dashed var(--border)}
+.adv-body.show{display:block}
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.btn{flex:1;border:none;border-radius:9px;padding:11px 10px;font-size:14px;cursor:pointer;font-family:inherit;transition:filter .15s,transform .05s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-ghost{background:#f1f3f6;color:var(--muted)}
+.btn-ghost:hover{background:#e7eaf0}
+.result-hero{text-align:center;padding:24px 20px;margin-bottom:18px;border-radius:14px;border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow)}
+.result-hero .tag{display:inline-block;font-size:12px;font-weight:600;padding:3px 14px;border-radius:999px;margin-bottom:10px}
+.result-hero .big{font-size:52px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
+.result-hero .big .u{font-size:18px;font-weight:500;color:var(--muted);margin-left:4px}
+.result-hero .sub{font-size:14px;color:var(--muted);margin-top:8px}
+@media(max-width:500px){.result-hero .big{font-size:42px}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-size:21px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+.stat .s{font-size:11px;color:#9aa6b2;margin-top:2px}
+.advice{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:18px}
+.advice h3{font-size:15px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.advice ul{list-style:none;font-size:13.5px;color:#37404d}
+.advice li{padding:5px 0;padding-left:22px;position:relative}
+.advice li::before{content:"•";position:absolute;left:8px;color:var(--primary);font-weight:700}
+.chart-card,.rail-card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:16px;margin-bottom:18px}
+.chart-card h3,.rail-card h3{font-size:15px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+svg{display:block;max-width:100%;height:auto}
+.ref{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:20px;margin-top:18px}
+.ref h3{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ref h3::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left}
+th{background:#f7f9fc;color:var(--muted);font-weight:600;white-space:nowrap}
+.formula{background:#f7f9fc;border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px;color:#37404d;margin:8px 0}
+.formula b{color:var(--primary)}
+footer{text-align:center;color:#9aa6b2;font-size:12px;margin-top:24px}
+.badge-stretch{background:var(--accent-weak);color:var(--accent)}
+.badge-shrink{background:var(--primary-weak);color:var(--primary)}
+.badge-none{background:#f1f3f6;color:var(--muted)}
+.badge-warn{background:var(--warn-weak);color:var(--warn)}
+@media print{
+  body{background:#fff;padding:0}
+  .card,.stat,.result-hero,.chart-card,.rail-card,.advice,.ref{box-shadow:none}
+  .btn-row,.adv-toggle{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="ico">🛤️</span>钢轨应力放散拉伸量计算</h1>
+    <p>无缝线路应力放散作业 · 放散量 / 温度应力 / 温度力 计算</p>
+  </header>
+
+  <div class="grid">
+    <!-- 左：参数输入 -->
+    <section class="card">
+      <h2>参数输入</h2>
+      <div class="field">
+        <label>钢轨类型</label>
+        <div class="input-wrap">
+          <select id="railType">
+            <option value="50">50 kg/m 钢轨</option>
+            <option value="60" selected>60 kg/m 钢轨</option>
+            <option value="75">75 kg/m 钢轨</option>
+          </select>
+        </div>
+        <div class="hint">截面积：50轨 65.80 cm² / 60轨 77.45 cm² / 75轨 95.04 cm²</div>
+      </div>
+      <div class="field">
+        <label>放散长度 L（钢轨放散单元长度）</label>
+        <div class="input-wrap">
+          <input type="number" id="length" value="1000" min="1" step="10">
+          <span class="unit">m</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>作业时实际轨温 T<sub>实</sub></label>
+        <div class="input-wrap">
+          <input type="number" id="twork" value="20" step="0.5">
+          <span class="unit">℃</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>设计锁定轨温 T<sub>锁</sub></label>
+        <div class="input-wrap">
+          <input type="number" id="tlock" value="25" step="0.5">
+          <span class="unit">℃</span>
+        </div>
+        <div class="hint">设计锁定轨温（一般取设计范围中值，如 23~28℃ 取 25℃）</div>
+      </div>
+      <div class="adv-toggle" id="advToggle">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+        高级选项（附加修正量）
+      </div>
+      <div class="adv-body" id="advBody">
+        <div class="field">
+          <label>附加修正量 ΔL<sub>修</sub></label>
+          <div class="input-wrap">
+            <input type="number" id="corr" value="0" step="0.5">
+            <span class="unit">mm</span>
+          </div>
+          <div class="hint">用于补偿测量误差、钢轨爬行等，施工中常预留计算放散量的 5%~10%，按现场要求输入。</div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnCalc">立即计算</button>
+        <button class="btn btn-ghost" id="btnExample">载入示例</button>
+      </div>
+    </section>
+
+    <!-- 右：结果 -->
+    <section>
+      <div class="result-hero">
+        <span class="tag badge-none" id="heroTag">—</span>
+        <div class="big"><span id="heroDL">0.0</span><span class="u">mm</span></div>
+        <div class="sub" id="heroSub">请输入参数后自动计算</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">轨温差 ΔT</div><div class="v" id="sDT">—</div><div class="s">设计锁定 − 实际轨温</div></div>
+        <div class="stat"><div class="k">温度应力 σ</div><div class="v" id="sSigma">—</div><div class="s">MPa</div></div>
+        <div class="stat"><div class="k">温度力 P</div><div class="v" id="sP">—</div><div class="s">kN</div></div>
+        <div class="stat"><div class="k">单位温度力</div><div class="v" id="sPer">—</div><div class="s">kN / ℃</div></div>
+      </div>
+      <div class="rail-card">
+        <h3>钢轨伸缩方向示意</h3>
+        <svg id="railSvg" viewBox="0 0 680 150"></svg>
+      </div>
+      <div class="chart-card">
+        <h3>放散量 — 轨温差关系曲线</h3>
+        <svg id="chartSvg" viewBox="0 0 680 340"></svg>
+      </div>
+      <div class="advice">
+        <h3>作业建议与提示</h3>
+        <ul id="adviceList"></ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- 参考数据 -->
+  <section class="ref">
+    <h3>计算原理与参考数据</h3>
+    <div class="formula">
+      放散量 <b>ΔL = 0.0118 × L × (T<sub>锁</sub> − T<sub>实</sub>)</b>（mm）&nbsp;·&nbsp;
+      温度应力 <b>σ = E·α·ΔT ≈ 2.478 × ΔT</b>（MPa）&nbsp;·&nbsp;
+      温度力 <b>P = σ × A</b>（N）
+    </div>
+    <table>
+      <thead><tr><th>钢轨类型</th><th>截面积 A（cm²）</th><th>每 ℃ 温度力（kN）</th></tr></thead>
+      <tbody>
+        <tr><td>50 kg/m</td><td>65.80</td><td>≈ 16.3</td></tr>
+        <tr><td>60 kg/m</td><td>77.45</td><td>≈ 19.2</td></tr>
+        <tr><td>75 kg/m</td><td>95.04</td><td>≈ 23.5</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12.5px;color:var(--muted)">注：取钢轨线膨胀系数 α = 11.8×10⁻⁶ /℃，弹性模量 E = 2.1×10⁵ MPa。计算结果供现场参考，最终放散方案以设计文件与施工规范为准。</p>
+  </section>
+
+  <footer>钢轨应力放散辅助计算工具 · 仅供工程参考</footer>
+</div>
+
+<script>
+var RAIL = {
+  50: { label: '50 kg/m', A: 6580 },
+  60: { label: '60 kg/m', A: 7745 },
+  75: { label: '75 kg/m', A: 9504 }
+};
+var ALPHA = 11.8e-6;
+var E_MOD = 2.1e5;
+
+function $(id){ return document.getElementById(id); }
+
+function fmt(v, d){
+  if (v === null || isNaN(v)) return '—';
+  if (Math.abs(v) >= 1000) return (v / 1000).toFixed(d || 1) + '×10³';
+  return v.toFixed(d == null ? 1 : d);
+}
+
+function niceNum(x){
+  var exp = Math.floor(Math.log10(x));
+  var f = x / Math.pow(10, exp);
+  var nf = f < 1.5 ? 1 : (f < 3 ? 2 : (f < 7 ? 5 : 10));
+  return nf * Math.pow(10, exp);
+}
+
+function calc(){
+  var rail = RAIL[$('railType').value];
+  var L = parseFloat($('length').value);
+  var Twork = parseFloat($('twork').value);
+  var Tlock = parseFloat($('tlock').value);
+  var corr = parseFloat($('corr').value) || 0;
+
+  if (!L || L <= 0 || isNaN(Twork) || isNaN(Tlock)){
+    $('heroDL').textContent = '—';
+    $('heroTag').textContent = '参数有误';
+    $('heroTag').className = 'tag badge-warn';
+    $('heroSub').textContent = '请检查输入参数（长度需大于 0）';
+    return;
+  }
+
+  var dT = Tlock - Twork;                 // ℃
+  var dL = 0.0118 * L * dT + corr;        // mm
+  var sigma = E_MOD * ALPHA * dT;         // MPa
+  var P = Math.abs(sigma) * rail.A / 1000; // kN
+  var per = 2.478 * rail.A / 1000;         // kN / ℃
+
+  // ---- 主结果 ----
+  var dlAbs = Math.abs(dL);
+  var tag, cls, sub;
+  if (dlAbs < 1) {
+    tag = '无需放散'; cls = 'badge-none';
+    sub = '轨温差很小，钢轨接近锁定状态';
+  } else if (dL > 0) {
+    tag = '需 拉 伸'; cls = 'badge-stretch';
+    sub = '作业轨温低于锁定轨温，钢轨需伸长 ' + dlAbs.toFixed(1) + ' mm（可采用拉伸器/撞轨）';
+  } else {
+    tag = '需 收 缩'; cls = 'badge-shrink';
+    sub = '作业轨温高于锁定轨温，钢轨需缩短 ' + dlAbs.toFixed(1) + ' mm（放散多余应力）';
+  }
+  $('heroTag').textContent = tag;
+  $('heroTag').className = 'tag ' + cls;
+  $('heroDL').textContent = dlAbs.toFixed(1);
+  $('heroSub').textContent = sub;
+
+  // ---- 统计 ----
+  $('sDT').textContent = (dT >= 0 ? '+' : '') + dT.toFixed(1);
+  $('sSigma').textContent = (sigma >= 0 ? '+' : '') + sigma.toFixed(1);
+  $('sP').textContent = P.toFixed(1);
+  $('sPer').textContent = per.toFixed(1);
+
+  // ---- 示意图 ----
+  drawRail(dL, rail);
+  // ---- 曲线 ----
+  drawChart(L, dT, dL);
+  // ---- 建议 ----
+  buildAdvice(dT, dlAbs, rail);
+}
+
+function drawRail(dL, rail){
+  var svg = $('railSvg');
+  svg.innerHTML = '';
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs){
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  // 轨枕
+  for (var i = 0; i < 12; i++){
+    svg.appendChild(el('rect', {
+      x: 66 + i * 47, y: 100, width: 28, height: 12, rx: 3,
+      fill: '#cdd5df'
+    }));
+  }
+  // 路基
+  svg.appendChild(el('rect', { x: 40, y: 112, width: 600, height: 10, rx: 4, fill: '#e3e8ef' }));
+
+  // 钢轨
+  svg.appendChild(el('rect', { x: 70, y: 62, width: 540, height: 26, rx: 4, fill: '#7d93ab' }));
+  svg.appendChild(el('rect', { x: 70, y: 66, width: 540, height: 5, rx: 2, fill: '#a9bccd' }));
+
+  // 方向箭头
+  var stretch = dL > 0;   // 两端向外
+  var shrink  = dL < 0;   // 两端向内
+  var dir = stretch ? 1 : (shrink ? -1 : 0);
+  function arrow(cx, cy, dx, color){
+    var tri = el('path', {
+      d: 'M' + (cx - dx * 14) + ',' + cy + ' l' + (dx * 14) + ',-8 v16 z',
+      fill: color
+    });
+    svg.appendChild(tri);
+    svg.appendChild(el('line', {
+      x1: cx, y1: cy - 26, x2: cx, y2: cy + 26,
+      stroke: color, 'stroke-width': 2.4, 'stroke-linecap': 'round'
+    }));
+  }
+  if (dir !== 0){
+    var c = stretch ? '#e8590c' : '#1667e3';
+    arrow(70, 75, -dir, c);    // 左端
+    arrow(610, 75,  dir, c);   // 右端
+  }
+
+  // 文字
+  var msg, mcolor;
+  if (dir === 0){ msg = '无需放散，钢轨保持锁定状态'; mcolor = '#5f6b7a'; }
+  else if (stretch){ msg = '需拉伸：钢轨向两端伸长 ' + Math.abs(dL).toFixed(1) + ' mm'; mcolor = '#e8590c'; }
+  else { msg = '需收缩：钢轨向中间缩短 ' + Math.abs(dL).toFixed(1) + ' mm'; mcolor = '#1667e3'; }
+  var t = el('text', {
+    x: 340, y: 42, 'text-anchor': 'middle',
+    'font-size': 15, 'font-weight': 600, fill: mcolor,
+    'font-family': 'inherit'
+  });
+  t.textContent = msg;
+  svg.appendChild(t);
+
+  var t2 = el('text', {
+    x: 340, y: 138, 'text-anchor': 'middle',
+    'font-size': 12, fill: '#9aa6b2', 'font-family': 'inherit'
+  });
+  t2.textContent = '轨型 ' + rail.label + ' ｜ 放散长度 ' + $('length').value + ' m';
+  svg.appendChild(t2);
+}
+
+function drawChart(L, dT, dL){
+  var svg = $('chartSvg');
+  svg.innerHTML = '';
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs){
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  var W = 680, H = 340, ml = 72, mr = 16, mt = 24, mb = 48;
+  var pw = W - ml - mr, ph = H - mt - mb;
+  var xMin = -25, xMax = 35;
+
+  var base = Math.max(50, Math.abs(0.0118 * L * xMin), Math.abs(0.0118 * L * xMax), Math.abs(dL));
+  var dLmax = Math.ceil(base / 50) * 50;
+
+  function X(t){ return ml + (t - xMin) / (xMax - xMin) * pw; }
+  function Y(v){ return mt + (dLmax - v) / (2 * dLmax) * ph; }
+
+  var clip = el('clipPath', { id: 'clipPlot' });
+  clip.appendChild(el('rect', { x: ml, y: mt, width: pw, height: ph }));
+  svg.appendChild(clip);
+
+  // 网格
+  var yStep = niceNum(dLmax / 4);
+  for (var v = -dLmax; v <= dLmax + 0.001; v += yStep){
+    var yc = Y(v);
+    svg.appendChild(el('line', { x1: ml, y1: yc, x2: ml + pw, y2: yc, stroke: '#e9edf3', 'stroke-width': 1 }));
+    var t1 = el('text', { x: ml - 8, y: yc + 4, 'text-anchor': 'end', 'font-size': 10.5, fill: '#9aa6b2' });
+    t1.textContent = v;
+    svg.appendChild(t1);
+  }
+  for (var t = xMin; t <= xMax; t += 5){
+    var xc = X(t);
+    svg.appendChild(el('line', { x1: xc, y1: mt, x2: xc, y2: mt + ph, stroke: '#e9edf3', 'stroke-width': 1 }));
+    var t2 = el('text', { x: xc, y: mt + ph + 16, 'text-anchor': 'middle', 'font-size': 10.5, fill: '#9aa6b2' });
+    t2.textContent = t;
+    svg.appendChild(t2);
+  }
+
+  // 零线
+  svg.appendChild(el('line', {
+    x1: ml, y1: Y(0), x2: ml + pw, y2: Y(0),
+    stroke: '#b6c0cc', 'stroke-width': 1.4
+  }));
+
+  // 数据线
+  var pts = [];
+  var stepN = 200;
+  for (var i = 0; i <= stepN; i++){
+    var tt = xMin + (xMax - xMin) * i / stepN;
+    pts.push(X(tt).toFixed(1) + ',' + Y(0.0118 * L * tt).toFixed(1));
+  }
+  svg.appendChild(el('polyline', {
+    points: pts.join(' '), fill: 'none',
+    stroke: '#1667e3', 'stroke-width': 2.4, 'stroke-linejoin': 'round',
+    'clip-path': 'url(#clipPlot)'
+  }));
+
+  // 当前点
+  var cx = X(Math.max(xMin, Math.min(xMax, dT)));
+  var cy = Y(Math.max(-dLmax, Math.min(dLmax, dL)));
+  svg.appendChild(el('line', {
+    x1: cx, y1: Y(0), x2: cx, y2: cy,
+    stroke: '#e8590c', 'stroke-width': 1.4, 'stroke-dasharray': '4 3'
+  }));
+  svg.appendChild(el('circle', { cx: cx, cy: cy, r: 6, fill: '#e8590c', stroke: '#fff', 'stroke-width': 2 }));
+
+  // 当前点标注
+  var lbl = 'ΔT=' + (dT >= 0 ? '+' : '') + dT.toFixed(1) + '℃  →  ΔL=' + (dL >= 0 ? '+' : '') + dL.toFixed(1) + ' mm';
+  var box = el('rect', { x: ml + pw - 190, y: mt - 2, width: 184, height: 22, rx: 6, fill: 'rgba(255,255,255,.92)', stroke: '#e3e8ef' });
+  svg.appendChild(box);
+  var bl = el('text', { x: ml + pw - 98, y: mt + 14, 'text-anchor': 'middle', 'font-size': 12, fill: '#e8590c', 'font-weight': 600 });
+  bl.textContent = lbl;
+  svg.appendChild(bl);
+
+  // 轴标题
+  var ax = el('text', { x: ml + pw / 2, y: H - 4, 'text-anchor': 'middle', 'font-size': 12, fill: '#5f6b7a' });
+  ax.textContent = '轨温差 ΔT = T锁 − T实（℃）';
+  svg.appendChild(ax);
+  var ay = el('text', { x: 14, y: mt + ph / 2, 'text-anchor': 'middle', 'font-size': 12, fill: '#5f6b7a', transform: 'rotate(-90 14 ' + (mt + ph / 2) + ')' });
+  ay.textContent = '放散量 ΔL（mm）';
+  svg.appendChild(ay);
+}
+
+function buildAdvice(dT, dlAbs, rail){
+  var ul = $('adviceList');
+  ul.innerHTML = '';
+  var items = [];
+  var adT = Math.abs(dT);
+
+  if (adT <= 5) {
+    items.push('轨温差较小（≤5℃），可正常组织放散作业，作业时间短、施工影响小。');
+  } else if (adT <= 15) {
+    items.push('轨温差适中，建议采用滚筒法或“滚筒 + 拉伸器”法进行放散。');
+  } else {
+    items.push('轨温差较大（＞15℃），放散量大，建议分段放散或制定专项施工方案，避免一次拉伸过大。');
+  }
+  if (dlAbs >= 100) {
+    items.push('放散量已达 ' + dlAbs.toFixed(0) + ' mm，注意核算拉伸器行程与轨缝预留位置，作业后必须复测并确认实际锁定轨温在设计范围内。');
+  }
+  items.push('放散前应松开全部扣件，将钢轨抬起置于滚筒上，减少摩擦阻力，保证钢轨自由伸缩。');
+  items.push('拉伸（收缩）到位后，待轨温稳定、钢轨应力均匀后方可上紧扣件锁定，并做好标记与记录。');
+  if (dT < 0) {
+    items.push('当前轨温高于设计锁定轨温，钢轨存在压应力，作业时应密切监视轨温变化，防止胀轨跑道。');
+  } else {
+    items.push('当前轨温低于设计锁定轨温，钢轨存在拉应力，作业时注意钢轨防断与拉伸设备安全。');
+  }
+
+  items.forEach(function(txt){
+    var li = document.createElement('li');
+    li.textContent = txt;
+    ul.appendChild(li);
+  });
+}
+
+// ---- 交互 ----
+['railType','length','twork','tlock','corr'].forEach(function(id){
+  $(id).addEventListener('input', calc);
+});
+$('btnCalc').addEventListener('click', calc);
+
+$('advToggle').addEventListener('click', function(){
+  this.classList.toggle('open');
+  $('advBody').classList.toggle('show');
+});
+
+$('btnExample').addEventListener('click', function(){
+  $('railType').value = '60';
+  $('length').value = '2000';
+  $('twork').value = '12';
+  $('tlock').value = '25';
+  $('corr').value = '0';
+  calc();
+});
+
+calc();
+</script>
+</body>
+</html>
