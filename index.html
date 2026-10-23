@@ -122,21 +122,21 @@ footer{text-align:center;color:#9aa6b2;font-size:12px;margin-top:24px}
       <div class="field">
         <label>放散长度 L（钢轨放散单元长度）</label>
         <div class="input-wrap">
-          <input type="number" id="length" value="1000" min="1" step="10">
+          <input type="number" id="length" min="1" step="10">
           <span class="unit">m</span>
         </div>
       </div>
       <div class="field">
         <label>作业时实际轨温 T<sub>实</sub></label>
         <div class="input-wrap">
-          <input type="number" id="twork" value="20" step="0.5">
+          <input type="number" id="twork" step="0.5">
           <span class="unit">℃</span>
         </div>
       </div>
       <div class="field">
         <label>设计锁定轨温 T<sub>锁</sub></label>
         <div class="input-wrap">
-          <input type="number" id="tlock" value="25" step="0.5">
+          <input type="number" id="tlock" step="0.5">
           <span class="unit">℃</span>
         </div>
         <div class="hint">设计锁定轨温（一般取设计范围中值，如 23~28℃ 取 25℃）</div>
@@ -149,7 +149,7 @@ footer{text-align:center;color:#9aa6b2;font-size:12px;margin-top:24px}
         <div class="field">
           <label>附加修正量 ΔL<sub>修</sub></label>
           <div class="input-wrap">
-            <input type="number" id="corr" value="0" step="0.5">
+            <input type="number" id="corr" step="0.5">
             <span class="unit">mm</span>
           </div>
           <div class="hint">用于补偿测量误差、钢轨爬行等，施工中常预留计算放散量的 5%~10%，按现场要求输入。</div>
@@ -489,7 +489,7 @@ $('btnExample').addEventListener('click', function(){
   calc();
 });
 
-calc();
+// 页面打开时不自动计算，等用户输入后再算
 </script>
 </body>
 </html>
